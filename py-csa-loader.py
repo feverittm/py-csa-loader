@@ -71,7 +71,6 @@ def load_csv(file):
             )
 
 
-
 def main(arguments):
     parse_args(arguments)
 
@@ -102,8 +101,6 @@ def main(arguments):
                 del fn
             else:
                 files_list.append(fn)
-                print(f"File: {fn['#FriendlyName']}")
-
 
     # top level window stuff...
     root = Tk()
@@ -114,71 +111,75 @@ def main(arguments):
     top_frame = Frame()
 
     # downloadable files list
-    files_frame = Frame(master = top_frame)
-    file_label = Label(master = files_frame, text="Files:")
-    file_label.pack(side=TOP)
-    files_listbox = Listbox(master = files_frame, selectmode = "BROWSE")
-    idx = 1
+    files_frame = Frame(master=top_frame, relief=RAISED, borderwidth=1)
+    files_listbox = Listbox(master=files_frame, selectmode="BROWSE")
+    files_listbox.pack(side=LEFT, fill=BOTH)
+    scrollbar = Scrollbar(master=files_frame)
+    scrollbar.pack(side=RIGHT, fill=BOTH)
     if files_list:
         for file in files_list:
-            print(file)
-            files_listbox.insert(idx, file['#FriendlyName'])
-            idx = idx + 1
-    files_listbox.yview_scroll(5, UNITS)
-    files_listbox.pack(side=TOP)
+            files_listbox.insert(END, file['#FriendlyName'])
+    files_listbox.config(yscrollcommand=scrollbar.set)
+    scrollbar.config(command=files_listbox.yview)
     files_frame.pack(side=LEFT)
 
     # select competition year
-    controls_frame = Frame(master = top_frame)
-    year_frame = Frame(master = controls_frame)
-    year_label = Label(master = year_frame, text="Select Competition Year ")
+    controls_frame = Frame(master=top_frame)
+    year_frame = Frame(master=controls_frame)
+    year_label = Label(master=year_frame, text="Select Competition Year ")
     year_label.pack(side=LEFT)
-    year_list = Combobox(master = year_frame)
+    year_list = Combobox(master=year_frame)
     year_list['values'] = software_years
     year_list.current(0)
-    year_list.pack(side=RIGHT)
-    year_frame.pack(side=TOP)
-    
+    year_list.pack(side=RIGHT, padx=5)
+    year_frame.pack(side=TOP, pady=10, fill=X)
+
     # Select the Download Folder
-    dl_frame = Frame(master = controls_frame)
-    dl_folder_label = Label(master = dl_frame, text="Download Folder ")
+    dl_frame = Frame(master=controls_frame)
+    dl_folder_label = Label(master=dl_frame, text="Download Folder ")
     dl_folder_label.pack(side=LEFT)
-    dl_folder_value = Entry(master = dl_frame, text="")
-    dl_folder_value.pack(side=LEFT)
-    dl_browse_button = Button(master = dl_frame, text="Browse", command=get_directory(root, dl_folder_value))
-    dl_browse_button.pack(side=LEFT)
+    dl_folder_value = Entry(master=dl_frame, text="")
+    dl_folder_value.pack(side=LEFT, padx=5)
+    dl_browse_button = Button(
+        master=dl_frame, text="Browse", command=get_directory(root, dl_folder_value))
+    dl_browse_button.pack(side=LEFT, padx=5)
     dl_frame.pack(side=TOP)
 
-    db_frame = Frame(master = controls_frame)
-    download_button = Button(master = db_frame, text="Download", command=start_download())
-    download_button.pack(side=BOTTOM)
-    db_frame.pack(side=BOTTOM)
+    db_frame = Frame(master=controls_frame)
+    download_button = Button(
+        master=db_frame, text="Download", command=start_download())
+    download_button.pack(side=BOTTOM, pady=20, fill=X, expand=True)
+    db_frame.pack(side=BOTTOM, fill=X, expand=True)
 
     controls_frame.pack(side=TOP)
 
     #status_label = Label(progress_frame, text="Idle")
 
     top_frame.pack(side=TOP)
+
     # -- bottom frame progress bar and status label
-    # bot_frame = Frame(window)
-    # progress = Progressbar(master=bot_frame, length = 200)
-    # status_msg = Label(master=bot_frame, text = "Idle")
+    bot_frame = Frame(root)
+    progress = Progressbar(master=bot_frame, length=200)
+    progress.pack(side=LEFT)
+    status_msg = Label(master=bot_frame, text="Idle")
+    status_msg.pack(side=LEFT)
     # progress['value'] = 0
-    # bot_frame.pack(side=BOTTOM, fill=X)
-    # file_label.grid(column=0, row=0)
+    bot_frame.pack(side=BOTTOM, fill=X)
 
     # start the main gui loop
     root.mainloop()
 
+
 def get_directory(root, dl_folder_value):
-    #root.withdraw()
+    # root.withdraw()
     folder_selected = filedialog.askdirectory()
 
     dl_folder_value.configure(text=folder_selected)
 
+
 def start_download():
     print("Start Download")
 
+
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
-
