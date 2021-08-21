@@ -90,78 +90,75 @@ def main(arguments):
         exit
     elif len(software_years) == 1:
         print(f"Only 1 year defined: {software_years[0]}")
-    selected_software_year = software_years[0]
+    selected_software_year = software_years[-1]
+    print(f"Selecting Default Year {selected_software_year}")
 
     files_list = []
     with open(selected_software_year, "r") as csvfile:
         read_dict = csv.DictReader(csvfile)
         for fn in read_dict:
-            if fn["FriendlyName"][0] == "#":
+            if fn["#FriendlyName"][0] == "#":
                 # this line is commented out
                 del fn
             else:
                 files_list.append(fn)
-                print(f"File: {fn['FriendlyName']}")
+                print(f"File: {fn['#FriendlyName']}")
 
 
     # top level window stuff...
     root = Tk()
     root.title("py-csa-loader")
-    root.geometry("{}x{}".format(450, 450))
-    fontStyle = tkfont.Font(family="Lucida Grande", size=18)
+    #root.geometry("{}x{}".format(450, 450))
+    #fontStyle = tkfont.Font(family="Lucida Grande", size=18)
 
-    files_frame = Frame(root)
-    controls_frame = Frame(root)
-    progress_frame = Frame(root)
-
-    root.grid_rowconfigure(1, weight=1)
-    root.grid_columnconfigure(0, weight=1)
-
-    files_frame.grid(row=0, sticky="nw")
-    controls_frame.grid(row=0, sticky="ne")
-    progress_frame.grid(row=1, sticky="s")
+    top_frame = Frame()
 
     # downloadable files list
-    file_label = Label(files_frame, text="Files:")
-    files_listbox = Listbox(files_frame, selectmode = "BROWSE")
+    files_frame = Frame(master = top_frame)
+    file_label = Label(master = files_frame, text="Files:")
+    file_label.pack(side=TOP)
+    files_listbox = Listbox(master = files_frame, selectmode = "BROWSE")
     idx = 1
     if files_list:
         for file in files_list:
             print(file)
-            files_listbox.insert(idx, file['FriendlyName'])
+            files_listbox.insert(idx, file['#FriendlyName'])
             idx = idx + 1
     files_listbox.yview_scroll(5, UNITS)
+    files_listbox.pack(side=TOP)
+    files_frame.pack(side=LEFT)
 
     # select competition year
-    year_label = Label(controls_frame, text="Select Competition Year ")
-    year_list = Combobox(controls_frame)
+    controls_frame = Frame(master = top_frame)
+    year_frame = Frame(master = controls_frame)
+    year_label = Label(master = year_frame, text="Select Competition Year ")
+    year_label.pack(side=LEFT)
+    year_list = Combobox(master = year_frame)
     year_list['values'] = software_years
     year_list.current(0)
-
+    year_list.pack(side=RIGHT)
+    year_frame.pack(side=TOP)
+    
     # Select the Download Folder
-    dl_folder_label = Label(controls_frame, text="Download Folder ")
-    dl_folder_value = Label(controls_frame, text="")
-    dl_browse_button = Button(controls_frame, text="Browse", command=get_directory(root, dl_folder_value))
-    #root.withdraw()
-    #folder_selected = filedialog.askdirectory()
+    dl_frame = Frame(master = controls_frame)
+    dl_folder_label = Label(master = dl_frame, text="Download Folder ")
+    dl_folder_label.pack(side=LEFT)
+    dl_folder_value = Entry(master = dl_frame, text="")
+    dl_folder_value.pack(side=LEFT)
+    dl_browse_button = Button(master = dl_frame, text="Browse", command=get_directory(root, dl_folder_value))
+    dl_browse_button.pack(side=LEFT)
+    dl_frame.pack(side=TOP)
 
-    download_button = Button(controls_frame, text="Download", command=start_download())
+    db_frame = Frame(master = controls_frame)
+    download_button = Button(master = db_frame, text="Download", command=start_download())
+    download_button.pack(side=BOTTOM)
+    db_frame.pack(side=BOTTOM)
 
-    status_label = Label(progress_frame, text="Idle")
+    controls_frame.pack(side=TOP)
 
-    file_label.grid(row=0, column=0)
-    files_listbox.grid(row=1, column=0)
-    
-    year_label.grid(row=0, column=0)
-    year_list.grid(row=0, column=1)
-    
-    dl_folder_label.grid(row=2, column=1)
-    dl_folder_value.grid(row=2, column=2)
-    dl_browse_button.grid(row=2, column=3)
+    #status_label = Label(progress_frame, text="Idle")
 
-    download_button.grid(row=3, column=2)
-
-    status_label.grid(row=0, column=0)
+    top_frame.pack(side=TOP)
     # -- bottom frame progress bar and status label
     # bot_frame = Frame(window)
     # progress = Progressbar(master=bot_frame, length = 200)
