@@ -92,7 +92,18 @@ def get_directory():
     selected_write_folder = StringVar()
     selected_write_folder = filedialog.askdirectory()
     print(f"Write Folder: {selected_write_folder}")
-    selected_download_folder.set(selected_write_folder)
+    if len(selected_write_folder) > 0:
+        dir = os.listdir(selected_write_folder)
+        if not os.path.exists(selected_write_folder):
+            print(f"Cannot file directory {selected_write_folder}")
+            return()
+        if len(dir) > 0:
+            print("Error: Download Directory not empty!")
+            return()
+        if not os.access(selected_write_folder, os.W_OK):
+            print("Error: Download Directory not writable!")
+            return()
+        selected_download_folder.set(selected_write_folder)
 
 
 def start_download():
