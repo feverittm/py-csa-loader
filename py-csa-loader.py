@@ -68,26 +68,31 @@ def load_csv(file):
                 row[0], row[1], row[2],
             )
 
+
 def load_files(selected_software_year):
     if len(files_list) > 0:
         files_list.clear()
+    fd = {}
     with open(selected_software_year, "r") as csvfile:
         read_dict = csv.DictReader(csvfile)
         for fn in read_dict:
-            if fn["#FriendlyName"][0] == "#":
-                # this line is commented out
-                del fn
-            else:
-                files_list.append(fn)
+            print(fn)
+            files_list.append(fn)
+            fd[fn['#FriendlyName']] = fn
+
 
 def update_year(event):
     if not year_list.get() == "":
         year_selected = year_list.get()
         print(f"Year selected: {year_selected}")
         load_files(year_selected)
-        files_listbox.delete(0,END)
+        files_listbox.delete(0, END)
+        idx=0
         for file in files_list:
             files_listbox.insert(END, file['#FriendlyName'])
+            files_index[file['#FriendlyName']] = idx
+            idx = idx + 1
+
 
 def get_directory():
     selected_write_folder = StringVar()
@@ -109,8 +114,11 @@ def get_directory():
 
 def start_download():
     print("Start Download")
-    folder = dl_folder_value.get()
-    print(f"  ... download folder = {folder}")
+    dest_folder = dl_folder_value.get()
+    if not os.path.exists(dest_folder):
+        os.makedirs(dest_folder)  # create folder if it does not exist
+    print(f"  ... download folder = {dest_folder}")
+
     files = []
     cname = files_listbox.curselection()
     for i in cname:
@@ -120,12 +128,12 @@ def start_download():
         print(val)
 
 
-
 def download(url: str, dest_folder: str):
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)  # create folder if it does not exist
 
-    filename = url.split('/')[-1].replace(" ", "_")  # be careful with file names
+    # be careful with file names
+    filename = url.split('/')[-1].replace(" ", "_")
     file_path = os.path.join(dest_folder, filename)
 
     r = requests.get(url, stream=True)
@@ -141,7 +149,7 @@ def download(url: str, dest_folder: str):
         print("Download failed: status code {}\n{}".format(r.status_code, r.text))
 
 
-##### start main...
+# start main...
 
 parse_args(sys.argv[1:])
 
@@ -150,6 +158,7 @@ parse_args(sys.argv[1:])
 # download from the original github account.
 software_years = []
 files_list = []
+files_index = {}
 for file in os.listdir("."):
     if "FRCSoftware" in file:
         print(f"    software file: {file}")
@@ -163,7 +172,6 @@ elif len(software_years) == 1:
 selected_software_year = software_years[-1]
 print(f"Selecting Default Year {selected_software_year}")
 
-files_list = []
 load_files(selected_software_year)
 
 # top level window stuff...
@@ -194,7 +202,7 @@ selected_year = StringVar()
 year_frame = Frame(master=controls_frame)
 year_label = Label(master=year_frame, text="Select Competition Year ")
 year_label.pack(side=LEFT)
-year_list = Combobox(master=year_frame, textvariable = selected_year)
+year_list = Combobox(master=year_frame, textvariable=selected_year)
 year_list['values'] = software_years
 year_list.current(len(software_years)-1)
 year_list.pack(side=RIGHT, padx=5)
@@ -228,7 +236,7 @@ top_frame.pack(side=TOP)
 # -- bottom frame progress bar and status label
 bot_frame = Frame(root)
 #progress = Progressbar(master=bot_frame, length=200)
-#progress.pack(side=LEFT)
+# progress.pack(side=LEFT)
 status_msg = Label(master=bot_frame, text="Idle")
 status_msg.pack(side=LEFT)
 # progress['value'] = 0
@@ -236,5 +244,3 @@ bot_frame.pack(side=BOTTOM, fill=X)
 
 # start the main gui loop
 root.mainloop()
-
-
