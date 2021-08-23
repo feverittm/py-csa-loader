@@ -39,6 +39,7 @@ from tkinter import messagebox
 from tkinter import filedialog
 from tkinter.ttk import Combobox
 import tkinter.font as tkfont
+import requests
 
 
 def parse_args(arguments):
@@ -108,6 +109,36 @@ def get_directory():
 
 def start_download():
     print("Start Download")
+    folder = dl_folder_value.get()
+    print(f"  ... download folder = {folder}")
+    files = []
+    cname = files_listbox.curselection()
+    for i in cname:
+        op = files_listbox.get(i)
+        files.append(op)
+    for val in files:
+        print(val)
+
+
+
+def download(url: str, dest_folder: str):
+    if not os.path.exists(dest_folder):
+        os.makedirs(dest_folder)  # create folder if it does not exist
+
+    filename = url.split('/')[-1].replace(" ", "_")  # be careful with file names
+    file_path = os.path.join(dest_folder, filename)
+
+    r = requests.get(url, stream=True)
+    if r.ok:
+        print("saving to", os.path.abspath(file_path))
+        with open(file_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024 * 8):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+                    os.fsync(f.fileno())
+    else:  # HTTP status code 4XX/5XX
+        print("Download failed: status code {}\n{}".format(r.status_code, r.text))
 
 
 ##### start main...
@@ -145,7 +176,7 @@ top_frame = Frame()
 
 # downloadable files list
 files_frame = Frame(master=top_frame, relief=RAISED, borderwidth=1)
-files_listbox = Listbox(master=files_frame, selectmode="BROWSE")
+files_listbox = Listbox(master=files_frame, selectmode="multiple")
 files_listbox.pack(side=LEFT, fill=BOTH)
 scrollbar = Scrollbar(master=files_frame)
 scrollbar.pack(side=RIGHT, fill=BOTH)
