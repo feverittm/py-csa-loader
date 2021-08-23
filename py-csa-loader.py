@@ -34,7 +34,24 @@ import json
 import pprint
 import hashlib
 import csv
-from tkinter import Tk, Frame, Label, Button, Listbox, Scrollbar, Entry, END, RAISED, TOP, LEFT, RIGHT, BOTTOM, BOTH, StringVar, X
+from tkinter import (
+    Tk,
+    Frame,
+    Label,
+    Button,
+    Listbox,
+    Scrollbar,
+    Entry,
+    END,
+    RAISED,
+    TOP,
+    LEFT,
+    RIGHT,
+    BOTTOM,
+    BOTH,
+    StringVar,
+    X,
+)
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter.ttk import Combobox
@@ -56,8 +73,8 @@ def parse_args(arguments):
     )
 
     args = parser.parse_args(arguments)
-
     return args
+
 
 def load_files(selected_software_year):
     if len(files_list) > 0:
@@ -67,7 +84,7 @@ def load_files(selected_software_year):
         read_dict = csv.DictReader(csvfile)
         for fn in read_dict:
             files_list.append(fn)
-            fd[fn['#FriendlyName']] = fn
+            fd[fn["#FriendlyName"]] = fn
 
 
 def update_year(event):
@@ -76,28 +93,31 @@ def update_year(event):
         print(f"Year selected: {year_selected}")
         load_files(year_selected)
         files_listbox.delete(0, END)
-        idx=0
         for file in fd.keys():
             files_listbox.insert(END, file)
+
 
 """
 Return true is directory is OK for download, false otherwise
 """
+
+
 def check_directory(selected_write_folder):
     if len(selected_write_folder) > 0:
         dir = os.listdir(selected_write_folder)
         if not os.path.exists(selected_write_folder):
             print(f"Cannot file directory {selected_write_folder}")
-            return(False)
+            return False
         if len(dir) > 0:
             print("Warning: Download Directory not empty!")
         if not os.access(selected_write_folder, os.W_OK):
             print("Error: Download Directory not writable!")
-            return(False)
-        return(True)
+            return False
+        return True
     else:
         # empty directory name
-        return(False)
+        return False
+
 
 def get_directory():
     selected_write_folder = StringVar()
@@ -128,13 +148,13 @@ def download(url: str, dest_folder: str):
         os.makedirs(dest_folder)  # create folder if it does not exist
 
     # be careful with file names
-    filename = url.split('/')[-1].replace(" ", "_")
+    filename = url.split("/")[-1].replace(" ", "_")
     file_path = os.path.join(dest_folder, filename)
 
     r = requests.get(url, stream=True)
     if r.ok:
         print("saving to", os.path.abspath(file_path))
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024 * 8):
                 if chunk:
                     f.write(chunk)
@@ -172,8 +192,8 @@ load_files(selected_software_year)
 # top level window stuff...
 root = Tk()
 root.title("py-csa-loader")
-#root.geometry("{}x{}".format(450, 450))
-#fontStyle = tkfont.Font(family="Lucida Grande", size=18)
+# root.geometry("{}x{}".format(450, 450))
+# fontStyle = tkfont.Font(family="Lucida Grande", size=18)
 
 top_frame = Frame()
 
@@ -185,7 +205,7 @@ scrollbar = Scrollbar(master=files_frame)
 scrollbar.pack(side=RIGHT, fill=BOTH)
 if files_list:
     for file in files_list:
-        files_listbox.insert(END, file['#FriendlyName'])
+        files_listbox.insert(END, file["#FriendlyName"])
 files_listbox.config(yscrollcommand=scrollbar.set)
 scrollbar.config(command=files_listbox.yview)
 files_frame.pack(side=LEFT)
@@ -198,10 +218,10 @@ year_frame = Frame(master=controls_frame)
 year_label = Label(master=year_frame, text="Select Competition Year ")
 year_label.pack(side=LEFT)
 year_list = Combobox(master=year_frame, textvariable=selected_year)
-year_list['values'] = software_years
-year_list.current(len(software_years)-1)
+year_list["values"] = software_years
+year_list.current(len(software_years) - 1)
 year_list.pack(side=RIGHT, padx=5)
-year_list.bind('<<ComboboxSelected>>', update_year)
+year_list.bind("<<ComboboxSelected>>", update_year)
 year_frame.pack(side=TOP, pady=10, fill=X)
 
 # Select the Download Folder
@@ -211,26 +231,24 @@ dl_folder_label = Label(master=dl_frame, text="Download Folder ")
 dl_folder_label.pack(side=LEFT)
 dl_folder_value = Entry(master=dl_frame, textvariable=selected_download_folder)
 dl_folder_value.pack(side=LEFT, padx=2)
-dl_browse_button = Button(
-    master=dl_frame, text="Browse", command=get_directory)
+dl_browse_button = Button(master=dl_frame, text="Browse", command=get_directory)
 dl_browse_button.pack(side=LEFT, padx=7)
 dl_frame.pack(side=TOP)
 
 db_frame = Frame(master=controls_frame)
-download_button = Button(
-    master=db_frame, text="Download", command=start_download)
+download_button = Button(master=db_frame, text="Download", command=start_download)
 download_button.pack(side=BOTTOM, pady=20, fill=X, expand=True)
 db_frame.pack(side=BOTTOM, fill=X, expand=True)
 
 controls_frame.pack(side=TOP)
 
-#status_label = Label(progress_frame, text="Idle")
+# status_label = Label(progress_frame, text="Idle")
 
 top_frame.pack(side=TOP)
 
 # -- bottom frame progress bar and status label
 bot_frame = Frame(root)
-#progress = Progressbar(master=bot_frame, length=200)
+# progress = Progressbar(master=bot_frame, length=200)
 # progress.pack(side=LEFT)
 status_msg = Label(master=bot_frame, text="Idle")
 status_msg.pack(side=LEFT)
