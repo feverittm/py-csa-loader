@@ -12,18 +12,20 @@ This tool downloads all the installers/packages for a given FRC season.
 CSA's commonly need these on hand in a USB to help teams update to the
 latest version or to diagnose issues.
 
-The original version of this application (which I think it awsome) was 
-written in C# and some anti-virus/scanners will call out this as having 
-a Trojan embedded in the application.  In order to work around this on some
-platforms, I have re-written it in basic python with a tkinter gui.  I have 
-tried to keep the same functionality as the original.
+The original version of this application (which I think is awsome) was 
+written in C# and (found this out while I was installing it) some anti-virus/
+scanners will call out this as having a Trojan embedded in the application.
+In order to work around this on some platforms, I have re-written it in 
+basic python with a tkinter gui.  I have tried to keep the same 
+functionality as the original.
 
 Looking at the original interface we will need:
-1. Two main frames (top, bottom) full span, bottom is very short (1 line)
-1.1. Bottom Frame has idle/busy indicator (label) and loading progress bar
+1. Two main frames (top, bottom):
+1.1. Bottom Frame has idle/busy/file downloaded indicator (label) and 
+    progress for tracking how many files have been downloaded
 1.2. Top is main window and is split into two frames left and right
 1.2.1 Left frame has list widget for all files to be downloaded
-1.2.2 Right frame with Year, Folder selection, and start download button
+1.2.2 Right frame has the Year, Folder selection, and start download button
 
 """
 
@@ -133,6 +135,14 @@ def get_directory():
     if check_directory(selected_write_folder):
         selected_download_folder.set(selected_write_folder)
 
+def get_file_md5(filename):
+    md5_hash = hashlib.md5()
+    with open(filename,"rb") as f:
+        # Read and update hash in chunks of 4K
+        for byte_block in iter(lambda: f.read(4096),b""):
+            md5_hash.update(byte_block)
+    print(md5_hash.hexdigest())
+    return(md5_hash.hexdigest())
 
 def start_download():
     print("Start Download")
@@ -141,32 +151,38 @@ def start_download():
         os.makedirs(dest_folder)  # create folder if it does not exist
     print(f"  ... download folder = {dest_folder}")
 
-    files = []
     cname = files_listbox.curselection()
     for i in cname:
         op = files_listbox.get(i)
-        files.append(op)
-    for val in files:
-        print(val)
+        print(f"{i}: op = {op}")
+        filename = files_info[op]['FileName']
+        url = files_info[op]['URL']
+        print(f"Filename: {filename}, URL: {url}")
+        fixed_name = filename.split("/")[-1].replace(" ", "_")
+        file_path = os.path.join(dest_folder, fixed_name)
+        if os.path.exists(file_path):
+            print("file already exists...")
+            hash = get_file_md5(file_path)
+        else:
+            download(url, file_path)
 
 
-def download(url: str, dest_folder: str):
-    if not os.path.exists(dest_folder):
-        os.makedirs(dest_folder)  # create folder if it does not exist
-
+def download(url: str, file_path: str):
     # be careful with file names
-    filename = url.split("/")[-1].replace(" ", "_")
-    file_path = os.path.join(dest_folder, filename)
-
     r = requests.get(url, stream=True)
     if r.ok:
+        block_size = 8*1024
+        file_size = int(r.headers.get('Content-Length', None))
+        num_bars = int((file_size / block_size)+0.9)
         print("saving to", os.path.abspath(file_path))
+        print(f"... size = {file_size}, number of bars = {num_bars}")
         with open(file_path, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024 * 8):
                 if chunk:
                     f.write(chunk)
                     f.flush()
                     os.fsync(f.fileno())
+        print("...download done")
     else:  # HTTP status code 4XX/5XX
         print("Download failed: status code {}\n{}".format(r.status_code, r.text))
 
@@ -232,6 +248,7 @@ year_frame.pack(side=TOP, pady=10, fill=X)
 
 # Select the Download Folder
 selected_download_folder = StringVar()
+selected_download_folder.set(os.getcwd())
 dl_frame = Frame(master=controls_frame)
 dl_folder_label = Label(master=dl_frame, text="Download Folder ")
 dl_folder_label.pack(side=LEFT)
