@@ -34,7 +34,7 @@ import json
 import pprint
 import hashlib
 import csv
-from tkinter import *
+from tkinter import Tk, Frame, Label, Button, Listbox, Scrollbar, Entry, END, RAISED, TOP, LEFT, RIGHT, BOTTOM, BOTH, StringVar, X
 from tkinter import messagebox
 from tkinter import filedialog
 from tkinter.ttk import Combobox
@@ -57,26 +57,15 @@ def parse_args(arguments):
 
     args = parser.parse_args(arguments)
 
-
-def load_csv(file):
-    with open(file) as csvfile:
-        readCSV = csv.reader(csvfile, delimiter=",")
-        for row in readCSV:
-            print(row)
-            print(row[0])
-            print(
-                row[0], row[1], row[2],
-            )
-
+    return args
 
 def load_files(selected_software_year):
     if len(files_list) > 0:
         files_list.clear()
-    fd = {}
+        fd.clear()
     with open(selected_software_year, "r") as csvfile:
         read_dict = csv.DictReader(csvfile)
         for fn in read_dict:
-            print(fn)
             files_list.append(fn)
             fd[fn['#FriendlyName']] = fn
 
@@ -88,27 +77,33 @@ def update_year(event):
         load_files(year_selected)
         files_listbox.delete(0, END)
         idx=0
-        for file in files_list:
-            files_listbox.insert(END, file['#FriendlyName'])
-            files_index[file['#FriendlyName']] = idx
-            idx = idx + 1
+        for file in fd.keys():
+            files_listbox.insert(END, file)
 
+"""
+Return true is directory is OK for download, false otherwise
+"""
+def check_directory(selected_write_folder):
+    if len(selected_write_folder) > 0:
+        dir = os.listdir(selected_write_folder)
+        if not os.path.exists(selected_write_folder):
+            print(f"Cannot file directory {selected_write_folder}")
+            return(False)
+        if len(dir) > 0:
+            print("Warning: Download Directory not empty!")
+        if not os.access(selected_write_folder, os.W_OK):
+            print("Error: Download Directory not writable!")
+            return(False)
+        return(True)
+    else:
+        # empty directory name
+        return(False)
 
 def get_directory():
     selected_write_folder = StringVar()
     selected_write_folder = filedialog.askdirectory()
     print(f"Write Folder: {selected_write_folder}")
-    if len(selected_write_folder) > 0:
-        dir = os.listdir(selected_write_folder)
-        if not os.path.exists(selected_write_folder):
-            print(f"Cannot file directory {selected_write_folder}")
-            return()
-        if len(dir) > 0:
-            print("Error: Download Directory not empty!")
-            return()
-        if not os.access(selected_write_folder, os.W_OK):
-            print("Error: Download Directory not writable!")
-            return()
+    if check_directory(selected_write_folder):
         selected_download_folder.set(selected_write_folder)
 
 
@@ -151,14 +146,14 @@ def download(url: str, dest_folder: str):
 
 # start main...
 
-parse_args(sys.argv[1:])
+args = parse_args(sys.argv[1:])
 
 # find list of available software download lists
 # this list should ultimately come from an internet
 # download from the original github account.
 software_years = []
 files_list = []
-files_index = {}
+fd = {}
 for file in os.listdir("."):
     if "FRCSoftware" in file:
         print(f"    software file: {file}")
