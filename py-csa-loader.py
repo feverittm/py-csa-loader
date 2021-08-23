@@ -77,32 +77,36 @@ def parse_args(arguments):
 
 
 def load_files(selected_software_year):
-    if len(files_list) > 0:
-        files_list.clear()
-        fd.clear()
+    """
+    Load the csv file with the CSA files information (for a specific year)
+    Create a dictionary of that file for reference (including the URL, filename,
+        and verification hash)
+    """
+    if len(files_info.keys()) > 0:
+        files_info.clear()
     with open(selected_software_year, "r") as csvfile:
         read_dict = csv.DictReader(csvfile)
         for fn in read_dict:
-            files_list.append(fn)
-            fd[fn["#FriendlyName"]] = fn
+            files_info[fn["#FriendlyName"]] = fn
 
 
 def update_year(event):
+    """
+    Update the files listbox for a given year.
+    """
     if not year_list.get() == "":
         year_selected = year_list.get()
         print(f"Year selected: {year_selected}")
         load_files(year_selected)
         files_listbox.delete(0, END)
-        for file in fd.keys():
+        for file in files_info.keys():
             files_listbox.insert(END, file)
 
 
-"""
-Return true is directory is OK for download, false otherwise
-"""
-
-
 def check_directory(selected_write_folder):
+    """
+    Return true if directory is OK for download
+    """
     if len(selected_write_folder) > 0:
         dir = os.listdir(selected_write_folder)
         if not os.path.exists(selected_write_folder):
@@ -120,6 +124,9 @@ def check_directory(selected_write_folder):
 
 
 def get_directory():
+    """
+    Get the download folder/directory from the user
+    """
     selected_write_folder = StringVar()
     selected_write_folder = filedialog.askdirectory()
     print(f"Write Folder: {selected_write_folder}")
@@ -172,8 +179,7 @@ args = parse_args(sys.argv[1:])
 # this list should ultimately come from an internet
 # download from the original github account.
 software_years = []
-files_list = []
-fd = {}
+files_info = {}
 for file in os.listdir("."):
     if "FRCSoftware" in file:
         print(f"    software file: {file}")
@@ -203,9 +209,9 @@ files_listbox = Listbox(master=files_frame, selectmode="multiple")
 files_listbox.pack(side=LEFT, fill=BOTH)
 scrollbar = Scrollbar(master=files_frame)
 scrollbar.pack(side=RIGHT, fill=BOTH)
-if files_list:
-    for file in files_list:
-        files_listbox.insert(END, file["#FriendlyName"])
+if len(files_info.keys()) > 0:
+    for filename in files_info.keys():
+        files_listbox.insert(END, filename)
 files_listbox.config(yscrollcommand=scrollbar.set)
 scrollbar.config(command=files_listbox.yview)
 files_frame.pack(side=LEFT)
