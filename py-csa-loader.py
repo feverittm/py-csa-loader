@@ -171,7 +171,11 @@ def download(name: str, url: str, file_path: str):
     r = requests.get(url, stream=True)
     if r.ok:
         block_size = 8*1024
-        file_size = int(r.headers.get('Content-Length', None))
+        try:
+            file_size = int(r.headers.get('Content-Length', None))
+        except:
+            print("Cannot locate remote url: "+url)
+            sys.exit()
         num_bars = int((file_size / block_size)+0.9)
         print("saving to", os.path.abspath(file_path))
         print(f"... size = {file_size}, number of bars = {num_bars}")
