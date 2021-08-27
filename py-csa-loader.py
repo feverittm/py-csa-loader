@@ -162,12 +162,11 @@ def start_download():
         file_path = os.path.join(dest_folder, fixed_name)
         if os.path.exists(file_path):
             print("file already exists...")
-            hash = get_file_md5(file_path)
         else:
-            download(url, file_path)
+            download(op, url, file_path)
 
 
-def download(url: str, file_path: str):
+def download(name: str, url: str, file_path: str):
     # be careful with file names
     r = requests.get(url, stream=True)
     if r.ok:
@@ -183,6 +182,10 @@ def download(url: str, file_path: str):
                     f.flush()
                     os.fsync(f.fileno())
         print("...download done")
+        hash = get_file_md5(file_path)
+        if hash != files_info[name]['MD5']:
+            print("File hash does not match!")
+        status_msg.config(text=f'{name} done')
     else:  # HTTP status code 4XX/5XX
         print("Download failed: status code {}\n{}".format(r.status_code, r.text))
 
