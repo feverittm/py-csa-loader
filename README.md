@@ -8,7 +8,7 @@ This tool downloads all the installers/packages for a given FRC season.
 CSA's commonly need these on hand in a USB to help teams update to the
 latest version or to diagnose issues.
 
-The original version of this application (which I think it awsome) was 
+The original version of this application (which I think is awsome) was 
 written in C# and some anti-virus/scanners will call out this as having 
 a Trojan embedded in the application.  In order to work around this on some
 platforms, I have re-written it in basic python with a tkinter gui.  I have 
